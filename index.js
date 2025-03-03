@@ -1,29 +1,75 @@
 class Calculator {
   a;
   b;
-  result;
+  _result;
 
   constructor(a, b) {
     this.a = a;
     this.b = b;
-    this.result = null;
+    this._result = null;
+  }
+
+  get result() {
+    return this._result;
+  }
+
+  set result(newRes) {
+    if (newRes % 1 !== 0) {
+      newRes = newRes.toFixed(11);
+      console.log("set detecté");
+    }
+    this._result = newRes;
   }
 
   operate(string) {
-    string = string.trim();
+    let operateur1Negatif = false;
+    let operateur2Negatif = false;
+
     string = string.replace("×", "*");
     string = string.replace("÷", "/");
+
+    if (string.charAt(0) === "-") {
+      string = string.replace("-", "");
+      operateur1Negatif = true;
+    }
+
     let match = string.match(/[\*\+\-/%]/);
+
     if (!match) {
       return "Error";
     }
     let operateur = match[0];
-    let operandes = string.split(/[\*\+\-/%]/);
+    let operandes = string.split(/[\*\+/%]/);
+
+    if (operandes.length === 1) {
+      operandes = string.split(/[\*\+\-/%]/);
+    }
+    if (operandes.length > 2) {
+      return "Error";
+    }
+
     let operande1 = operandes[0];
     let operande2 = operandes[1];
-    console.log(operandes);
 
-    if (!(Number.isNaN(Number(operande1)) || Number.isNaN(Number(operande2)))) {
+    if (operande2.charAt(0) === "-") {
+      operande2 = operande2.replace("-", "");
+      operateur2Negatif = true;
+    }
+
+    if (operateur1Negatif) {
+      operande1 = -operande1;
+    }
+    if (operateur2Negatif) {
+      operande2 = -operande2;
+    }
+
+    console.log(operande1, operande2);
+
+    if (
+      operande1 !== "" &&
+      operande2 !== "" &&
+      !(Number.isNaN(Number(operande1)) || Number.isNaN(Number(operande2)))
+    ) {
       operande1 = Number(operande1);
       operande2 = Number(operande2);
       this.a = operande1;
@@ -36,7 +82,6 @@ class Calculator {
         case "*":
           return this.multiply();
         case "/":
-          console.log("div");
           return this.divide();
         case "%":
           return this.modulo();
@@ -79,28 +124,57 @@ let clearButton = document.querySelector(".clear-button");
 let equalsButton = document.querySelector(".equals-button");
 let buttonPanel = document.querySelector(".button-panel");
 
+let operation = "";
+
 screen.textContent = "";
 
 buttonPanel.addEventListener("click", function (event) {
+  let lastScreenChar = screen.textContent.charAt(screen.textContent.length - 1);
+  let lastOperationChar = String(operation).charAt(operation.length - 1);
   if (
     !event.target.classList.contains("clear-button") &&
     !event.target.classList.contains("equals-button") &&
     event.target.tagName === "BUTTON" &&
-    !(
-      screen.textContent.charAt(screen.textContent.length - 1) === "." &&
-      event.target.textContent === "."
-    )
+    !(lastScreenChar === "." && event.target.textContent === ".")
   ) {
-    screen.textContent += event.target.textContent;
+    if (!event.target.classList.contains("operator-button")) {
+      screen.textContent += event.target.textContent;
+    }
+
+    if (
+      lastOperationChar === "÷" ||
+      lastOperationChar === "×" ||
+      lastOperationChar === "+" ||
+      lastOperationChar === "-" ||
+      lastOperationChar === "%"
+    ) {
+      if (
+        !event.target.classList.contains("operator-button") ||
+        event.target.classList.contains("minus-button")
+      ) {
+        if (!event.target.classList.contains("minus-button")) {
+          screen.textContent = event.target.textContent;
+        }
+        operation += event.target.textContent;
+      }
+    } else {
+      operation += event.target.textContent;
+    }
+    console.log(operation);
   }
 });
 
 clearButton.addEventListener("click", function () {
   screen.textContent = "";
+  operation = "";
 });
 
 equalsButton.addEventListener("click", function () {
   console.log(screen.textContent);
-  let result = calculator.operate(screen.textContent);
+  let result = calculator.operate(operation);
   screen.textContent = result;
+  operation = result;
 });
+
+//TODO check si ya un point ET pas d'opérateur -> interdire ajout point. Si ya pas de point et que c'est après un opérateur, c'est bon
+//TODO empecher entrer plusieurs 0 si c'est ya pas de point avant

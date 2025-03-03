@@ -36,6 +36,10 @@ class Calculator {
     let match = string.match(/[\*\+\-/%]/);
 
     if (!match) {
+      //if only one operand is inputted, it is displayed
+      if (!Number.isNaN(string)) {
+        return string;
+      }
       return "Error";
     }
     let operateur = match[0];
@@ -62,9 +66,7 @@ class Calculator {
     if (operateur2Negatif) {
       operande2 = -operande2;
     }
-
     console.log(operande1, operande2);
-
     if (
       operande1 !== "" &&
       operande2 !== "" &&
@@ -130,6 +132,11 @@ screen.textContent = "";
 let canBeReplacedByNumber = false;
 
 buttonPanel.addEventListener("click", function (event) {
+  //prevent leading zeros
+  if (event.target.textContent === "0" && screen.textContent === "0") {
+    return;
+  }
+
   let lastOperationChar = String(operation).charAt(operation.length - 1);
   if (
     !event.target.classList.contains("clear-button") &&
@@ -193,10 +200,6 @@ equalsButton.addEventListener("click", function () {
   canBeReplacedByNumber = true;
 });
 
-//TODO empecher entrer plusieurs 0 en premiers caractères
-
 //TODO pour les opérations avec plus d'un opérateur, calculer la premiere operation d'abord
 //si on appuie sur un opérateur et qu'on a deja appuyé sur un opérateur (que yen a deja un
 //dans operation), appuyer sur operateur <=> appuyer sur egal
-
-//TODO si on appuie sur un nombre apres avoir eu un resultat dans le display, ca devrait remplacer par le nombre entré

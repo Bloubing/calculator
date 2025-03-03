@@ -125,8 +125,9 @@ let equalsButton = document.querySelector(".equals-button");
 let buttonPanel = document.querySelector(".button-panel");
 
 let operation = "";
-
 screen.textContent = "";
+
+let canBeReplacedByNumber = false;
 
 buttonPanel.addEventListener("click", function (event) {
   let lastOperationChar = String(operation).charAt(operation.length - 1);
@@ -138,30 +139,45 @@ buttonPanel.addEventListener("click", function (event) {
       screen.textContent.indexOf(".") !== -1 && event.target.textContent === "."
     )
   ) {
-    if (!event.target.classList.contains("operator-button")) {
-      screen.textContent += event.target.textContent;
-    }
-
     if (
-      lastOperationChar === "÷" ||
-      lastOperationChar === "×" ||
-      lastOperationChar === "+" ||
-      lastOperationChar === "-" ||
-      lastOperationChar === "%"
+      canBeReplacedByNumber &&
+      !event.target.classList.contains("operator-button")
     ) {
+      screen.textContent = event.target.textContent;
+      operation = event.target.textContent;
+      canBeReplacedByNumber = false;
+    } else {
       if (
-        !event.target.classList.contains("operator-button") ||
-        event.target.classList.contains("minus-button")
+        canBeReplacedByNumber &&
+        event.target.classList.contains("operator-button")
       ) {
-        if (!event.target.classList.contains("minus-button")) {
-          screen.textContent = event.target.textContent;
+        canBeReplacedByNumber = false;
+      }
+      if (!event.target.classList.contains("operator-button")) {
+        screen.textContent += event.target.textContent;
+      }
+
+      if (
+        lastOperationChar === "÷" ||
+        lastOperationChar === "×" ||
+        lastOperationChar === "+" ||
+        lastOperationChar === "-" ||
+        lastOperationChar === "%"
+      ) {
+        if (
+          !event.target.classList.contains("operator-button") ||
+          event.target.classList.contains("minus-button")
+        ) {
+          if (!event.target.classList.contains("minus-button")) {
+            screen.textContent = event.target.textContent;
+          }
+          operation += event.target.textContent;
         }
+      } else {
         operation += event.target.textContent;
       }
-    } else {
-      operation += event.target.textContent;
+      console.log(operation);
     }
-    console.log(operation);
   }
 });
 
@@ -174,6 +190,13 @@ equalsButton.addEventListener("click", function () {
   let result = calculator.operate(operation);
   screen.textContent = result;
   operation = result;
+  canBeReplacedByNumber = true;
 });
 
 //TODO empecher entrer plusieurs 0 en premiers caractères
+
+//TODO pour les opérations avec plus d'un opérateur, calculer la premiere operation d'abord
+//si on appuie sur un opérateur et qu'on a deja appuyé sur un opérateur (que yen a deja un
+//dans operation), appuyer sur operateur <=> appuyer sur egal
+
+//TODO si on appuie sur un nombre apres avoir eu un resultat dans le display, ca devrait remplacer par le nombre entré

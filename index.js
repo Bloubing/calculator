@@ -15,7 +15,7 @@ class Calculator {
 
   set result(newRes) {
     if (newRes % 1 !== 0) {
-      newRes = newRes.toFixed(11);
+      newRes = parseFloat(newRes.toFixed(11));
       console.log("set detecté");
     }
     this._result = newRes;
@@ -129,13 +129,14 @@ let operation = "";
 screen.textContent = "";
 
 buttonPanel.addEventListener("click", function (event) {
-  let lastScreenChar = screen.textContent.charAt(screen.textContent.length - 1);
   let lastOperationChar = String(operation).charAt(operation.length - 1);
   if (
     !event.target.classList.contains("clear-button") &&
     !event.target.classList.contains("equals-button") &&
     event.target.tagName === "BUTTON" &&
-    !(lastScreenChar === "." && event.target.textContent === ".")
+    !(
+      screen.textContent.indexOf(".") !== -1 && event.target.textContent === "."
+    )
   ) {
     if (!event.target.classList.contains("operator-button")) {
       screen.textContent += event.target.textContent;
@@ -170,11 +171,9 @@ clearButton.addEventListener("click", function () {
 });
 
 equalsButton.addEventListener("click", function () {
-  console.log(screen.textContent);
   let result = calculator.operate(operation);
   screen.textContent = result;
   operation = result;
 });
 
-//TODO check si ya un point ET pas d'opérateur -> interdire ajout point. Si ya pas de point et que c'est après un opérateur, c'est bon
-//TODO empecher entrer plusieurs 0 si c'est ya pas de point avant
+//TODO empecher entrer plusieurs 0 en premiers caractères

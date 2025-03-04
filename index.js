@@ -16,20 +16,17 @@ class Calculator {
   set result(newRes) {
     if (newRes % 1 !== 0) {
       newRes = parseFloat(newRes.toFixed(11));
-      console.log("set detecté");
     }
-    this._result = newRes;
+    this._result = Number(newRes);
   }
 
   operate(string) {
+    string = string.replace("×", "*").replace("÷", "/");
+
     let operateur1Negatif = false;
-    let operateur2Negatif = false;
 
-    string = string.replace("×", "*");
-    string = string.replace("÷", "/");
-
-    if (string.charAt(0) === "-") {
-      string = string.replace("-", "");
+    if (string.startsWith("-")) {
+      string = string.substring(1); //remove first char
       operateur1Negatif = true;
     }
 
@@ -37,17 +34,21 @@ class Calculator {
 
     if (!match) {
       //if only one operand is inputted, it is displayed
-      if (!Number.isNaN(string)) {
-        return string;
+      let numberValue = Number(string);
+
+      if (!isNaN(numberValue)) {
+        console.log(numberValue);
+        if (operateur1Negatif) {
+          return -numberValue;
+        }
+        return numberValue;
       }
       return "Error";
     }
-    let operateur = match[0];
-    let operandes = string.split(/[\*\+/%]/);
 
-    if (operandes.length === 1) {
-      operandes = string.split(/[\*\+\-/%]/);
-    }
+    let operateur = match[0];
+    let operandes = string.split(operateur);
+
     if (operandes.length > 2) {
       return "Error";
     }
@@ -55,27 +56,21 @@ class Calculator {
     let operande1 = operandes[0];
     let operande2 = operandes[1];
 
-    if (operande2.charAt(0) === "-") {
-      operande2 = operande2.replace("-", "");
-      operateur2Negatif = true;
-    }
+    operande1 = Number(operande1);
+    operande2 = Number(operande2);
 
     if (operateur1Negatif) {
       operande1 = -operande1;
     }
-    if (operateur2Negatif) {
-      operande2 = -operande2;
-    }
-    console.log(operande1, operande2);
+
     if (
       operande1 !== "" &&
       operande2 !== "" &&
-      !(Number.isNaN(Number(operande1)) || Number.isNaN(Number(operande2)))
+      !(isNaN(Number(operande1)) || isNaN(Number(operande2)))
     ) {
-      operande1 = Number(operande1);
-      operande2 = Number(operande2);
       this.a = operande1;
       this.b = operande2;
+
       switch (operateur) {
         case "+":
           return this.add();
@@ -242,7 +237,7 @@ buttonPanel.addEventListener("click", function (event) {
       screen.textContent += event.target.textContent;
     }
 
-    let operatorsList = ["+", "%", "÷", "×"];
+    let operatorsList = ["-", "+", "%", "÷", "×"];
     let hasExistingOperator = operatorsList.some((operator) =>
       operation.includes(operator)
     );
@@ -258,15 +253,12 @@ buttonPanel.addEventListener("click", function (event) {
     ) {
       //if we try to add an operator (excepted minus) after another operator
       if (isLastOperationCharAnOperator(event, lastOperationChar)) {
-        console.log("on detecte que operateur apres operateur");
         operation = operation.slice(0, -1) + event.target.textContent;
       } else if (hasExistingOperator) {
-        console.log("lancement d'un result");
         displayResult(false);
         operation = screen.textContent;
       }
     }
-
     checkPostOperatorInput(event, lastOperationChar, hasExistingOperator);
   }
   console.log(operation);
@@ -280,7 +272,3 @@ clearButton.addEventListener("click", function () {
 equalsButton.addEventListener("click", function () {
   displayResult(true);
 });
-
-//TODO
-//si dans l'opération y'a un - et qu'on essaie d'ajouter un opérateur,
-//il faut displayResult

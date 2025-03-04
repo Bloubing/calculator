@@ -131,61 +131,116 @@ screen.textContent = "";
 
 let canBeReplacedByNumber = false;
 
-buttonPanel.addEventListener("click", function (event) {
+function displayResult(replaceable) {
+  let result = calculator.operate(operation);
+  screen.textContent = result;
+  operation = String(result);
+  canBeReplacedByNumber = replaceable;
+}
+
+function isLeadingZeros(event) {
+  return event.target.textContent === "0" && screen.textContent === "0";
+}
+
+function isCalculatorButtonClicked(event) {
+  return (
+    !event.target.classList.contains("clear-button") &&
+    !event.target.classList.contains("equals-button") &&
+    event.target.tagName === "BUTTON"
+  );
+}
+
+function checkPostOperatorInput(event) {
+  let lastOperationChar = String(operation).charAt(operation.length - 1);
+
+  if (
+    lastOperationChar === "÷" ||
+    lastOperationChar === "×" ||
+    lastOperationChar === "+" ||
+    lastOperationChar === "-" ||
+    lastOperationChar === "%"
+  ) {
+    //check if post-operator operand is valid (digit or minus operator)
+    //if it's an invalid operator, we don't add it to the operation
+    if (
+      !event.target.classList.contains("operator-button") ||
+      event.target.classList.contains("minus-button")
+    ) {
+      //don't show minus on screen
+      if (!event.target.classList.contains("minus-button")) {
+        screen.textContent = event.target.textContent;
+      }
+      //check if the last char was a minus and the input too, then don't add to the operation
+      if (
+        !(
+          operation.at(-1) === "-" &&
+          event.target.classList.contains("minus-button")
+        )
+      ) {
+        operation += event.target.textContent;
+      }
+    }
+  } else {
+    //add input to operation
+    operation += event.target.textContent;
+  }
+}
+
+function isTooManyPoints(event) {
+  return (
+    screen.textContent.indexOf(".") !== -1 && event.target.textContent === "."
+  );
+}
+
+function isInputCorrect(event) {
   //prevent leading zeros
-  if (event.target.textContent === "0" && screen.textContent === "0") {
+  //prevent adding multiple points
+  //verifies if calculator button clicked
+  return (
+    !isLeadingZeros(event) &&
+    !isTooManyPoints(event) &&
+    isCalculatorButtonClicked(event)
+  );
+}
+
+buttonPanel.addEventListener("click", function (event) {
+  if (!isInputCorrect(event)) {
     return;
   }
 
-  let lastOperationChar = String(operation).charAt(operation.length - 1);
-  if (
-    !event.target.classList.contains("clear-button") &&
-    !event.target.classList.contains("equals-button") &&
-    event.target.tagName === "BUTTON" &&
-    !(
-      screen.textContent.indexOf(".") !== -1 && event.target.textContent === "."
-    )
-  ) {
+  //check if result displayed and click on digit
+  if (canBeReplacedByNumber && event.target.classList.contains("digit")) {
+    screen.textContent = event.target.textContent;
+    operation = event.target.textContent;
+    canBeReplacedByNumber = false;
+  } else {
+    //check if result displayed and click on operator
     if (
       canBeReplacedByNumber &&
-      !event.target.classList.contains("operator-button")
+      event.target.classList.contains("operator-button")
     ) {
-      screen.textContent = event.target.textContent;
-      operation = event.target.textContent;
       canBeReplacedByNumber = false;
-    } else {
-      if (
-        canBeReplacedByNumber &&
-        event.target.classList.contains("operator-button")
-      ) {
-        canBeReplacedByNumber = false;
-      }
-      if (!event.target.classList.contains("operator-button")) {
-        screen.textContent += event.target.textContent;
-      }
-
-      if (
-        lastOperationChar === "÷" ||
-        lastOperationChar === "×" ||
-        lastOperationChar === "+" ||
-        lastOperationChar === "-" ||
-        lastOperationChar === "%"
-      ) {
-        if (
-          !event.target.classList.contains("operator-button") ||
-          event.target.classList.contains("minus-button")
-        ) {
-          if (!event.target.classList.contains("minus-button")) {
-            screen.textContent = event.target.textContent;
-          }
-          operation += event.target.textContent;
-        }
-      } else {
-        operation += event.target.textContent;
-      }
-      console.log(operation);
     }
+    //check if click on digit to display on screen
+    if (event.target.classList.contains("digit")) {
+      screen.textContent += event.target.textContent;
+    }
+
+    //check if there already is an operator in the current operation
+    if (event.target.classList.contains("operator-button")) {
+      let operatorsList = ["+", "%", "÷", "×"];
+      let hasExistingOperator = operatorsList.some((operator) =>
+        operation.includes(operator)
+      );
+      if (hasExistingOperator) {
+        displayResult(false);
+        operation = screen.textContent;
+      }
+    }
+
+    checkPostOperatorInput(event);
   }
+  console.log(operation);
 });
 
 clearButton.addEventListener("click", function () {
@@ -194,12 +249,5 @@ clearButton.addEventListener("click", function () {
 });
 
 equalsButton.addEventListener("click", function () {
-  let result = calculator.operate(operation);
-  screen.textContent = result;
-  operation = result;
-  canBeReplacedByNumber = true;
+  displayResult(true);
 });
-
-//TODO pour les opérations avec plus d'un opérateur, calculer la premiere operation d'abord
-//si on appuie sur un opérateur et qu'on a deja appuyé sur un opérateur (que yen a deja un
-//dans operation), appuyer sur operateur <=> appuyer sur egal

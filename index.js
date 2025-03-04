@@ -160,8 +160,7 @@ function isLastOperationCharAnOperator(event, lastOperationChar) {
   );
 }
 
-function checkPostOperatorInput(event, hasExistingOperator) {
-  let lastOperationChar = String(operation).charAt(operation.length - 1);
+function checkPostOperatorInput(event, lastOperationChar, hasExistingOperator) {
   if (isLastOperationCharAnOperator(event, lastOperationChar)) {
     //check if post-operator operand is valid (digit or minus operator)
     //if it's an invalid operator, we don't add it to the operation
@@ -183,6 +182,7 @@ function checkPostOperatorInput(event, hasExistingOperator) {
         operation += event.target.textContent;
       }
     }
+
     //the input is a digit
   } else if (
     lastOperationChar !== "" &&
@@ -217,6 +217,8 @@ function isInputCorrect(event) {
 }
 
 buttonPanel.addEventListener("click", function (event) {
+  let lastOperationChar = String(operation).charAt(operation.length - 1);
+
   if (!isInputCorrect(event)) {
     return;
   }
@@ -254,14 +256,18 @@ buttonPanel.addEventListener("click", function (event) {
       event.target.classList.contains("operator-button") &&
       !event.target.classList.contains("minus-button")
     ) {
-      if (hasExistingOperator) {
+      //if we try to add an operator (excepted minus) after another operator
+      if (isLastOperationCharAnOperator(event, lastOperationChar)) {
+        console.log("on detecte que operateur apres operateur");
+        operation = operation.slice(0, -1) + event.target.textContent;
+      } else if (hasExistingOperator) {
         console.log("lancement d'un result");
         displayResult(false);
         operation = screen.textContent;
       }
     }
 
-    checkPostOperatorInput(event, hasExistingOperator);
+    checkPostOperatorInput(event, lastOperationChar, hasExistingOperator);
   }
   console.log(operation);
 });

@@ -150,16 +150,19 @@ function isCalculatorButtonClicked(event) {
   );
 }
 
-function checkPostOperatorInput(event) {
-  let lastOperationChar = String(operation).charAt(operation.length - 1);
-
-  if (
+function isLastOperationCharAnOperator(event, lastOperationChar) {
+  return (
     lastOperationChar === "÷" ||
     lastOperationChar === "×" ||
     lastOperationChar === "+" ||
     lastOperationChar === "-" ||
     lastOperationChar === "%"
-  ) {
+  );
+}
+
+function checkPostOperatorInput(event, hasExistingOperator) {
+  let lastOperationChar = String(operation).charAt(operation.length - 1);
+  if (isLastOperationCharAnOperator(event, lastOperationChar)) {
     //check if post-operator operand is valid (digit or minus operator)
     //if it's an invalid operator, we don't add it to the operation
     if (
@@ -180,8 +183,18 @@ function checkPostOperatorInput(event) {
         operation += event.target.textContent;
       }
     }
+    //the input is a digit
+  } else if (
+    lastOperationChar !== "" &&
+    event.target.classList.contains("minus-button") &&
+    hasExistingOperator
+  ) {
+    //at this point, the operation is not empty, includes an operator and we try to add a minus after a digit,
+
+    displayResult(false);
+    operation += "-";
   } else {
-    //add input to operation
+    //add digit input to operation
     operation += event.target.textContent;
   }
 }
@@ -221,24 +234,34 @@ buttonPanel.addEventListener("click", function (event) {
     ) {
       canBeReplacedByNumber = false;
     }
+
     //check if click on digit to display on screen
     if (event.target.classList.contains("digit")) {
       screen.textContent += event.target.textContent;
     }
 
-    //check if there already is an operator in the current operation
-    if (event.target.classList.contains("operator-button")) {
-      let operatorsList = ["+", "%", "÷", "×"];
-      let hasExistingOperator = operatorsList.some((operator) =>
-        operation.includes(operator)
-      );
+    let operatorsList = ["+", "%", "÷", "×"];
+    let hasExistingOperator = operatorsList.some((operator) =>
+      operation.includes(operator)
+    );
+
+    //check if current input is an operator (except minus)
+    //if there is already an operator in the operation, calculate
+    //the result and add the current input (an operator) to the result
+    //to allow calculation chaining
+
+    if (
+      event.target.classList.contains("operator-button") &&
+      !event.target.classList.contains("minus-button")
+    ) {
       if (hasExistingOperator) {
+        console.log("lancement d'un result");
         displayResult(false);
         operation = screen.textContent;
       }
     }
 
-    checkPostOperatorInput(event);
+    checkPostOperatorInput(event, hasExistingOperator);
   }
   console.log(operation);
 });
@@ -251,3 +274,7 @@ clearButton.addEventListener("click", function () {
 equalsButton.addEventListener("click", function () {
   displayResult(true);
 });
+
+//TODO
+//si dans l'opération y'a un - et qu'on essaie d'ajouter un opérateur,
+//il faut displayResult
